@@ -20,24 +20,36 @@ document.addEventListener("DOMContentLoaded", () => {
         activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
+
+        const escapeHtml = (value) =>
+          String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
         const participantsItems = details.participants
-          .map(
-            (participant) =>
-              `<li class="participant-item">
-                <span class="participant-email">${participant}</span>
+          .map((participant) => {
+            const safeParticipant = escapeHtml(participant);
+            const safeName = escapeHtml(name);
+
+            return `<li class="participant-item">
+                <span class="participant-email">${safeParticipant}</span>
                 <button
                   type="button"
                   class="participant-remove-btn"
                   data-activity="${encodeURIComponent(name)}"
                   data-email="${encodeURIComponent(participant)}"
-                  aria-label="Unregister ${participant} from ${name}"
+                  aria-label="Unregister ${safeParticipant} from ${safeName}"
                   title="Unregister participant"
                 >
                   🗑
                 </button>
-              </li>`
-          )
+              </li>`;
+          })
           .join("");
+
         const participantsSection = details.participants.length
           ? `<ul class="participants-list">${participantsItems}</ul>`
           : '<p class="participants-empty">No participants yet. Be the first to join!</p>';
@@ -109,7 +121,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   activitiesList.addEventListener("click", async (event) => {
-    const removeButton = event.target.closest(".participant-remove-btn");
+    const removeButton = (event.target instanceof Element ? event.target : event.target.parentElement)?.closest(
+      ".participant-remove-btn"
+    );
 
     if (!removeButton) {
       return;
